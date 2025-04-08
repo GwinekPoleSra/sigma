@@ -1,7 +1,7 @@
-Monday: Link1
-Tuesday: nigga
-Wednesday: Link3
-Thursday: Link4
-Friday: Link5
-Saturday: Link6
-Sunday: Link7
+Monday Dzień dobry! To wiadomość na poniedziałek.
+Tuesday Dzień dobry! To wiadomość na wtorek.
+Wednesday Dzień dobry! To wiadomość na środę.
+Thursday Dzień dobry! To wiadomość na czwartek.
+Friday Dzień dobry! To wiadomość na piątek.
+Saturday Dzień dobry! To wiadomość na sobotę.
+Sunday Dzień dobry! To wiadomość na niedzielę.

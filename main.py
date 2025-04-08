@@ -42,7 +42,7 @@ async def send_daily_message():
     now = datetime.datetime.now() + datetime.timedelta(hours=2)  # zmiana strefy czasowej
     print(f"Aktualna godzina na Repl.it: {now}")
 
-    if now.hour == 23 and now.minute == 20:
+    if now.hour == 23 and now.minute == 26:
         try:
             with open('wiadomosci.txt', 'r', encoding="utf-8") as f:
                 lines = f.readlines()

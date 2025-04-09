@@ -98,7 +98,7 @@ async def send_daily_message():
             if channel:
                 message = get_today_message()
                 if message:
-                    await channel.send(message)
+                    await channel.send(f"**CODZIENNY DYSK 👇👇**\n{message}")
                 else:
                     await channel.send("Brak zaplanowanej wiadomości na dziś.")
             else:

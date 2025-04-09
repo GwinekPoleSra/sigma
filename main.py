@@ -103,55 +103,49 @@ async def send_daily_message():
                     await channel.send("Brak zaplanowanej wiadomości na dziś.")
             else:
                 print("Nie znaleziono kanału.")
-
         except Exception as e:
             print(f"Błąd przy wysyłaniu wiadomości: {e}")
 
-# Event: zapisywanie wiadomości na dziś (z kanału READ_CHANNEL_ID)
-    @bot.event
-    async def on_message(message):
-        if message.author == bot.user:
-            return  # ignorujemy wiadomości od bota
+# 🛠️ POPRAWIONE: Event on_message (WYCIĄGNIĘTY z pętli!)
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
 
-        if message.channel.id == READ_CHANNEL_ID:
-            if not message.content.startswith('!'):  # <--- DODAJ TEN WARUNEK
-                try:
-                    today = datetime.datetime.now().strftime("%A")  # np. "Monday"
+    if message.channel.id == READ_CHANNEL_ID:
+        if not message.content.startswith('!'):
+            try:
+                today = datetime.datetime.now().strftime("%A")
 
-                    # Wczytaj wszystkie linie z pliku
-                    if os.path.exists('wiadomosci.txt'):
-                        with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
-                            lines = f.readlines()
-                    else:
-                        lines = []
+                if os.path.exists('wiadomosci.txt'):
+                    with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                else:
+                    lines = []
 
-                    # Nowa zawartość pliku
-                    new_lines = []
-                    found = False
-                    for line in lines:
-                        if line.startswith(f"{today}:"):
-                            new_lines.append(f"{today}: {message.content}\n")
-                            found = True
-                        else:
-                            new_lines.append(line)
-
-                    # Jeśli nie znaleziono dzisiejszego dnia w pliku, dodaj nowy wpis
-                    if not found:
+                new_lines = []
+                found = False
+                for line in lines:
+                    if line.startswith(f"{today}:"):
                         new_lines.append(f"{today}: {message.content}\n")
+                        found = True
+                    else:
+                        new_lines.append(line)
 
-                    # Zapisz plik
-                    with open('wiadomosci.txt', 'w', encoding='utf-8') as f:
-                        f.writelines(new_lines)
+                if not found:
+                    new_lines.append(f"{today}: {message.content}\n")
 
-                    await message.channel.send("✅ Zaktualizowano wiadomość na dziś!")
+                with open('wiadomosci.txt', 'w', encoding='utf-8') as f:
+                    f.writelines(new_lines)
 
-                except Exception as e:
-                    print(f"Błąd przy zapisie wiadomości: {e}")
+                await message.channel.send("✅ Zaktualizowano wiadomość na dziś!")
 
-        await bot.process_commands(message)
+            except Exception as e:
+                print(f"Błąd przy zapisie wiadomości: {e}")
 
+    await bot.process_commands(message)
 
-# --- NOWE KOMENDY DO USTAWIANIA TEKSTÓW NA KONKRETNY DZIEŃ ---
+# --- KOMENDY ---
 
 @bot.command()
 async def pon(ctx, *, message):
@@ -187,7 +181,6 @@ async def sob(ctx, *, message):
 async def nie(ctx, *, message):
     save_message_for_day("Sunday", message)
     await ctx.send("✅ Zapisano wiadomość na **niedzielę**!")
-
 
 @bot.command()
 async def poka(ctx):

@@ -1,1 +1,7 @@
-
+Monday: gowno
+Tuesday: wtorek
+Wednesday: sraka
+Thursday: Link4
+Friday: Link5
+Saturday: Link6
+Sunday: Link7

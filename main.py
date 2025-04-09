@@ -41,6 +41,20 @@ DAY_MAP = {
     "nie": "Sunday"
 }
 
+@bot.command()
+async def dzis(ctx):
+    try:
+        message = get_today_message()
+        if message:
+            await ctx.send(f"**CODZIENNY DYSK 👇👇**\n{message}")
+        else:
+            await ctx.send("Brak zaplanowanej wiadomości na dziś.")
+    except Exception as e:
+        await ctx.send(f"❌ Wystąpił błąd podczas pobierania wiadomości: {e}")
+
+
+
+
 # Funkcja pomocnicza: zapisz wiadomość na konkretny dzień
 def save_message_for_day(day, content):
     if os.path.exists('wiadomosci.txt'):

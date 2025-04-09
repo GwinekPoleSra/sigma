@@ -106,6 +106,14 @@ async def send_daily_message():
         except Exception as e:
             print(f"Błąd przy wysyłaniu wiadomości: {e}")
 
+@bot.command()
+async def clear(ctx):
+    try:
+        with open('wiadomosci.txt', 'w', encoding='utf-8') as f:
+            f.write('')
+        await ctx.send("🧹 Plik `wiadomosci.txt` został wyczyszczony.")
+    except Exception as e:
+        await ctx.send(f"❌ Wystąpił błąd podczas czyszczenia pliku: {e}")
 # 🛠️ POPRAWIONE: Event on_message (WYCIĄGNIĘTY z pętli!)
 @bot.event
 async def on_message(message):

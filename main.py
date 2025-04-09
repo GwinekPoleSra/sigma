@@ -21,22 +21,72 @@ def keep_alive():
 # ------------------------------------
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))         # Kanał do wysyłania wiadomości
+READ_CHANNEL_ID = int(os.getenv("READ_CHANNEL_ID")) # Kanał do odczytywania wiadomości
 
+# Intencje bota
 intents = discord.Intents.default()
-intents.message_content = True  # to pozwala czytać wiadomości
+intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Mapowanie skrótów komend na angielskie dni tygodnia
+DAY_MAP = {
+    "pon": "Monday",
+    "wto": "Tuesday",
+    "sro": "Wednesday",
+    "czw": "Thursday",
+    "pia": "Friday",
+    "sob": "Saturday",
+    "nie": "Sunday"
+}
+
+# Funkcja pomocnicza: zapisz wiadomość na konkretny dzień
+def save_message_for_day(day, content):
+    if os.path.exists('wiadomosci.txt'):
+        with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    else:
+        lines = []
+
+    new_lines = []
+    found = False
+    for line in lines:
+        if line.startswith(f"{day}:"):
+            new_lines.append(f"{day}: {content}\n")
+            found = True
+        else:
+            new_lines.append(line)
+
+    if not found:
+        new_lines.append(f"{day}: {content}\n")
+
+    with open('wiadomosci.txt', 'w', encoding='utf-8') as f:
+        f.writelines(new_lines)
+
+# Funkcja pomocnicza: pobierz wiadomość na dziś
+def get_today_message():
+    today = datetime.datetime.now().strftime("%A")  # np. "Monday"
+    if os.path.exists('wiadomosci.txt'):
+        with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith(f"{today}:"):
+                    return line[len(today)+2:].strip()
+    return None
+
+# Gdy bot się włączy
 @bot.event
 async def on_ready():
     print(f"Zalogowano jako {bot.user}")
-    send_daily_message.start()  # uruchamia zadanie co 60 sek
+    send_daily_message.start()
 
+# Komenda testowa
 @bot.command()
-async def test(ctx):
+async def niga(ctx):
     await ctx.send("Działam normalnie 🎯")
 
+# Zadanie: codzienna wiadomość
 @tasks.loop(minutes=1)
 async def send_daily_message():
     now = datetime.datetime.now() + datetime.timedelta(hours=2)  # zmiana strefy czasowej
@@ -44,22 +94,113 @@ async def send_daily_message():
 
     if now.hour == 12 and now.minute == 0:
         try:
-            with open('wiadomosci.txt', 'r', encoding="utf-8") as f:
-                lines = f.readlines()
-                day = now.strftime('%A')  # Monday, Tuesday...
-
-                line = next((l for l in lines if l.split(' ')[0].strip().lower() == day.lower()), None)
-
-                if line:
-                    msg = line.split(' ', 1)[1].strip()
+            channel = bot.get_channel(CHANNEL_ID)
+            if channel:
+                message = get_today_message()
+                if message:
+                    await channel.send(message)
                 else:
-                    msg = "Brak wiadomości na dziś."
-
-                channel = bot.get_channel(CHANNEL_ID)
-                await channel.send(msg)
+                    await channel.send("Brak zaplanowanej wiadomości na dziś.")
+            else:
+                print("Nie znaleziono kanału.")
 
         except Exception as e:
-            print(f"Błąd: {e}")
+            print(f"Błąd przy wysyłaniu wiadomości: {e}")
+
+# Event: zapisywanie wiadomości na dziś (z kanału READ_CHANNEL_ID)
+    @bot.event
+    async def on_message(message):
+        if message.author == bot.user:
+            return  # ignorujemy wiadomości od bota
+
+        if message.channel.id == READ_CHANNEL_ID:
+            if not message.content.startswith('!'):  # <--- DODAJ TEN WARUNEK
+                try:
+                    today = datetime.datetime.now().strftime("%A")  # np. "Monday"
+
+                    # Wczytaj wszystkie linie z pliku
+                    if os.path.exists('wiadomosci.txt'):
+                        with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
+                            lines = f.readlines()
+                    else:
+                        lines = []
+
+                    # Nowa zawartość pliku
+                    new_lines = []
+                    found = False
+                    for line in lines:
+                        if line.startswith(f"{today}:"):
+                            new_lines.append(f"{today}: {message.content}\n")
+                            found = True
+                        else:
+                            new_lines.append(line)
+
+                    # Jeśli nie znaleziono dzisiejszego dnia w pliku, dodaj nowy wpis
+                    if not found:
+                        new_lines.append(f"{today}: {message.content}\n")
+
+                    # Zapisz plik
+                    with open('wiadomosci.txt', 'w', encoding='utf-8') as f:
+                        f.writelines(new_lines)
+
+                    await message.channel.send("✅ Zaktualizowano wiadomość na dziś!")
+
+                except Exception as e:
+                    print(f"Błąd przy zapisie wiadomości: {e}")
+
+        await bot.process_commands(message)
+
+
+# --- NOWE KOMENDY DO USTAWIANIA TEKSTÓW NA KONKRETNY DZIEŃ ---
+
+@bot.command()
+async def pon(ctx, *, message):
+    save_message_for_day("Monday", message)
+    await ctx.send("✅ Zapisano wiadomość na **poniedziałek**!")
+
+@bot.command()
+async def wto(ctx, *, message):
+    save_message_for_day("Tuesday", message)
+    await ctx.send("✅ Zapisano wiadomość na **wtorek**!")
+
+@bot.command()
+async def sro(ctx, *, message):
+    save_message_for_day("Wednesday", message)
+    await ctx.send("✅ Zapisano wiadomość na **środę**!")
+
+@bot.command()
+async def czw(ctx, *, message):
+    save_message_for_day("Thursday", message)
+    await ctx.send("✅ Zapisano wiadomość na **czwartek**!")
+
+@bot.command()
+async def pia(ctx, *, message):
+    save_message_for_day("Friday", message)
+    await ctx.send("✅ Zapisano wiadomość na **piątek**!")
+
+@bot.command()
+async def sob(ctx, *, message):
+    save_message_for_day("Saturday", message)
+    await ctx.send("✅ Zapisano wiadomość na **sobotę**!")
+
+@bot.command()
+async def nie(ctx, *, message):
+    save_message_for_day("Sunday", message)
+    await ctx.send("✅ Zapisano wiadomość na **niedzielę**!")
+
+
+@bot.command()
+async def poka(ctx):
+    if os.path.exists('wiadomosci.txt'):
+        with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        if content.strip():
+            await ctx.send(f"📋 **Zawartość wiadomości:**\n```\n{content}```")
+        else:
+            await ctx.send("📂 Plik `wiadomosci.txt` jest pusty.")
+    else:
+        await ctx.send("❌ Plik `wiadomosci.txt` nie istnieje.")
 
 # -------- Start ----------
 keep_alive()

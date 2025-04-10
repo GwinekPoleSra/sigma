@@ -1,7 +1,7 @@
-Monday: gowno
-Tuesday: wtorek
-Wednesday: sraka
-Thursday: Link4
-Friday: Link5
-Saturday: Link6
-Sunday: Link7
+Poniedziałek: Nie ma
+Wtorek: Nie ma
+Środa: Nie ma
+Czwartek: Nie ma
+Piątek: Nie ma
+Sobota: Nie ma
+Niedziela: Nie ma

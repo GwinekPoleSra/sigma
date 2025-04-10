@@ -21,13 +21,26 @@ def keep_alive():
 # ------------------------------------
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))         # Kanał do wysyłania wiadomości
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))  # Kanał do wysyłania wiadomości
 
 # Intencje bota
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Mapowanie dni tygodnia
+dni_polskie = {
+    "Monday": "Poniedziałek",
+    "Tuesday": "Wtorek",
+    "Wednesday": "Środa",
+    "Thursday": "Czwartek",
+    "Friday": "Piątek",
+    "Saturday": "Sobota",
+    "Sunday": "Niedziela"
+}
+
+dni_angielskie = {v: k for k, v in dni_polskie.items()}
 
 # Funkcja pomocnicza: zapisz wiadomość na konkretny dzień
 def save_message_for_day(day, content):
@@ -54,13 +67,15 @@ def save_message_for_day(day, content):
 
 # Funkcja pomocnicza: pobierz wiadomość na dziś
 def get_today_message():
-    today = datetime.datetime.now().strftime("%A")
+    today_eng = datetime.datetime.now().strftime("%A")
+    today_polish = dni_polskie.get(today_eng, today_eng)
+
     if os.path.exists('wiadomosci.txt'):
         with open('wiadomosci.txt', 'r', encoding='utf-8') as f:
             lines = f.readlines()
             for line in lines:
-                if line.startswith(f"{today}:"):
-                    return line[len(today)+2:].strip()
+                if line.startswith(f"{today_polish}:"):
+                    return line[len(today_polish)+2:].strip()
     return None
 
 # Gdy bot się włączy
@@ -83,7 +98,7 @@ async def dzis(ctx):
 
 # Komenda: testowa
 @bot.command()
-async def niga(ctx):
+async def test(ctx):
     await ctx.send("Działam normalnie 🎯")
 
 # Zadanie: codzienna wiadomość
@@ -116,41 +131,41 @@ async def clear(ctx):
     except Exception as e:
         await ctx.send(f"❌ Wystąpił błąd podczas czyszczenia pliku: {e}")
 
-# --- KOMENDY USTAWIAJĄCE DNI ---
+# --- KOMENDY USTAWIAJĄCE DNI (po polsku) ---
 
 @bot.command()
 async def pon(ctx, *, message):
-    save_message_for_day("Monday", message)
+    save_message_for_day("Poniedziałek", message)
     await ctx.send("✅ Zapisano wiadomość na **poniedziałek**!")
 
 @bot.command()
 async def wto(ctx, *, message):
-    save_message_for_day("Tuesday", message)
+    save_message_for_day("Wtorek", message)
     await ctx.send("✅ Zapisano wiadomość na **wtorek**!")
 
 @bot.command()
 async def sro(ctx, *, message):
-    save_message_for_day("Wednesday", message)
+    save_message_for_day("Środa", message)
     await ctx.send("✅ Zapisano wiadomość na **środę**!")
 
 @bot.command()
 async def czw(ctx, *, message):
-    save_message_for_day("Thursday", message)
+    save_message_for_day("Czwartek", message)
     await ctx.send("✅ Zapisano wiadomość na **czwartek**!")
 
 @bot.command()
 async def pia(ctx, *, message):
-    save_message_for_day("Friday", message)
+    save_message_for_day("Piątek", message)
     await ctx.send("✅ Zapisano wiadomość na **piątek**!")
 
 @bot.command()
 async def sob(ctx, *, message):
-    save_message_for_day("Saturday", message)
+    save_message_for_day("Sobota", message)
     await ctx.send("✅ Zapisano wiadomość na **sobotę**!")
 
 @bot.command()
 async def nie(ctx, *, message):
-    save_message_for_day("Sunday", message)
+    save_message_for_day("Niedziela", message)
     await ctx.send("✅ Zapisano wiadomość na **niedzielę**!")
 
 # Komenda: pokaż zawartość pliku
